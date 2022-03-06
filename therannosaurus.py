@@ -11,7 +11,7 @@ thesaurus = dict()
 
 def load_data():
 	global thesaurus
-	with open("corpus_10k.txt", "r", encoding='utf-8', errors='ignore') as corpus:   #Chargement du corpus (nom du fichier potentiellement à changer)
+	with open("test_corpus10k.txt", "r", encoding='utf-8', errors='ignore') as corpus:   #Chargement du corpus (nom du fichier potentiellement à changer)
 		lines = corpus.readlines()
 
 	for i in range(len(lines)):      #Pour chaque mot:
@@ -100,20 +100,31 @@ def better_cos_similarity(a,b):
 
 
 
-
+#fonction obligatoirement appelée, crée le dictionnaire de contextes
 load_data()
 
-#uncomment for version with vectors
+#cette fonction doit être appelée quand on choisis la méthode avec les vecteurs, elle ne doit pas être appelée quand on traite directement le dictionnaire "thesaurus" car elle le modifie
 #make_vectors()
 
+#déclaration des listes sur lesquelles on va travailler
 main_list = []
 liste = list(thesaurus.keys())
+
+#on parcourt la liste de clés du dictionnaire
 for index, key in enumerate(liste):
+	#on traite la clé key avec toutes celles qui suivent dans la liste: permet de comparer toutes les paires possibles
 	for other_key in liste[index+1:]:
 		#replace better_cos_similarity() with cos_similarity() for version with vectors
 		sim = better_cos_similarity(thesaurus[key], thesaurus[other_key])
+		#main_list va stocker toutes les paires du thésaurus, dans des tuples comprenant (première clé, deuxième clé, similarité entre première clé et deuxième clé)
 		tup = (key, other_key, sim)
 		main_list.append(tup)
 
+#on print toutes les paires ayant une similarité significative
+for tup in main_list:
+	if tup[2] > 0.85 and tup[2]<1:
+		print(tup)
+
+#exemples de temps de calculs pour différents corpus avec la fonction better_cos_similarity et avec cos_similarity
 #[100% of corpus_10K Finished in 15.7s], [10% of corpus_100K Finished in 174.6s],[100% of corpus_100K Finished in 465.6s] with better_cos_similarity
-#[100% of corpus_10K Finished in 12.3s], [10% of corpus_100K Finished in 356.3s] [100% of corpus_100K Finished in 1856.8s]with normal cos_similarity
+#[100% of corpus_10K Finished in 12.3s], [10% of corpus_100K Finished in 356.3s] [100% of corpus_100K Finished in 1856.8s]with cos_similarity
