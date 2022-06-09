@@ -29,7 +29,42 @@ def load_data():
 			voisin = splitj[2]				      #On stocke le lemme du mot voisin
 			thesaurus[(lemme, cat)][(voisin, j)] = thesaurus[(lemme, cat)].get((voisin, j), 0) + 1      #On stocke dans l'entrée lemme/cat le nombre d'apparition du voisin à la même position
 
+#computes thesaurus more than 2 times faster than load_data()
+def load_data2(path):
+	global thesaurus
 
+	with open(path, "r", encoding='utf-8', errors='ignore') as corpus:   #Chargement du corpus (nom du fichier potentiellement à changer)
+		lines = corpus.readlines()
+
+
+	for i in range(len(lines)):      #Pour chaque mot:
+		splitline = lines[i].split("\t")	    #Colonnes séparées par des tabulations
+		if (len(splitline)<10): 
+			continue	#Evite de prendre les lignes vides
+		key = splitline[2]+splitline[3] #on ajoutera l'indice après
+
+		thesaurus[key] = thesaurus.get(key, dict())	   #Si la clé (lemme, cat) n'existe pas encore dans le thésaurus, on la crée
+
+
+		try:
+			voisin1 = lines[i-2].split("\t")[2] + lines[i-2].split("\t")[3]			      #On stocke le lemme du mot voisin
+			thesaurus[voisin1] = thesaurus.get(voisin1, dict())	   #Si la clé (lemme, cat) n'existe pas encore dans le thésaurus, on la crée
+			thesaurus[key][voisin1] = thesaurus[key].get(voisin1, 0) + 1      #On stocke dans l'entrée lemme/cat le nombre d'apparition du voisin à la même position
+			thesaurus[voisin1][key] = thesaurus[voisin1].get(key, 0) + 1      #On stocke dans l'entrée lemme/cat le nombre d'apparition du voisin à la même position
+		except IndexError:
+			continue
+
+		try:
+			voisin2 = lines[i-2].split("\t")[2] + lines[i-2].split("\t")[3]			      #On stocke le lemme du mot voisin
+			thesaurus[voisin2] = thesaurus.get(voisin2, dict())	   #Si la clé (lemme, cat) n'existe pas encore dans le thésaurus, on la crée
+			thesaurus[key][voisin2] = thesaurus[key].get(voisin2, 0) + 1      #On stocke dans l'entrée lemme/cat le nombre d'apparition du voisin à la même position
+			thesaurus[voisin2][key] = thesaurus[voisin2].get(key, 0) + 1      #On stocke dans l'entrée lemme/cat le nombre d'apparition du voisin à la même position
+		except IndexError:
+			continue
+
+
+			
+			
 """
 for key in thesaurus.keys():
 	print("(" + key[0] + ", " + key[1] + ") : ")
