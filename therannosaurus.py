@@ -63,6 +63,58 @@ def load_data2(path):
 			continue
 
 
+#global vocab
+WORD2IDX = dict()
+#global rows
+ROWS = list()
+#global columns
+COLS = list()
+def load_data3(path):
+	global WORD2IDX
+	global ROWS
+	global COLS
+	with open(path, "r", encoding='utf-8', errors='ignore') as corpus:   #Chargement du corpus (nom du fichier potentiellement à changer)
+		lines = corpus.readlines()
+
+
+	for i in range(len(lines)):      #Pour chaque mot:
+		splitline = lines[i].split("\t")	    #Colonnes séparées par des tabulations
+		if (len(splitline)<10): 
+			continue	#Evite de prendre les lignes vides
+
+		key = splitline[2]+splitline[3] 
+		WORD2IDX[key] = WORD2IDX.get(key, len(WORD2IDX.keys()) + 1)	   #Si la clé (lemme, cat) n'existe pas encore dans le thésaurus, on la crée
+		row_index = WORD2IDX[key]
+
+		try:
+			col1_index = WORD2IDX[lines[i-1].split("\t")[2] + lines[i-1].split("\t")[3]]		      #On stocke le lemme du mot voisin
+			ROWS.append(row_index)
+			COLS.append(col1_index)
+			ROWS.append(col1_index)
+			COLS.append(row_index)
+		except IndexError:
+			continue
+
+		try:
+			col2_index = WORD2IDX[lines[i-2].split("\t")[2] + lines[i-2].split("\t")[3]]		      #On stocke le lemme du mot voisin
+			ROWS.append(row_index)
+			COLS.append(col2_index)
+			ROWS.append(col2_index)
+			COLS.append(row_index)
+		except IndexError:
+			continue
+
+path = "C:\\Users\\garri\\Documents\\estrepublicain.a.outmalt.tar\\estrepublicain.a.outmalt"
+for file in os.listdir(path):
+	load_data3(f"{path}\\{file}")
+	print(path+"\\"+file+ " DONE", len(WORD2IDX.keys()) , sys.getsizeof(WORD2IDX))
+	break
+	
+DATA = np.ones(len(ROWS))
+ROWS = np.array(ROWS,dtype = np.int32)
+COLS = np.array(COLS,dtype= np.int32)
+finalmatrix = coo_array((DATA, (ROWS, COLS)), dtype=np.int16)
+
 			
 			
 """
