@@ -83,37 +83,39 @@ def load_data3(path):
 			continue	#Evite de prendre les lignes vides
 
 		key = splitline[2]+splitline[3] 
-		WORD2IDX[key] = WORD2IDX.get(key, len(WORD2IDX.keys()) + 1)	   #Si la clé (lemme, cat) n'existe pas encore dans le thésaurus, on la crée
+		WORD2IDX[key] = WORD2IDX.get(key, len(WORD2IDX.keys()) + 1)	   #Si la clé (lemmecat) n'existe pas encore dans le thésaurus, on la crée
 		row_index = WORD2IDX[key]
 
 		try:
-			col1_index = WORD2IDX[lines[i-1].split("\t")[2] + lines[i-1].split("\t")[3]]		      #On stocke le lemme du mot voisin
+			col1_index = WORD2IDX[lines[i-1].split("\t")[2] + lines[i-1].split("\t")[3]] #On stocke le lemme du mot voisin
 			ROWS.append(row_index)
 			COLS.append(col1_index)
 			ROWS.append(col1_index)
 			COLS.append(row_index)
-		except IndexError:
+		except IndexError: #on evite de prendre les lignes vides
 			continue
 
 		try:
-			col2_index = WORD2IDX[lines[i-2].split("\t")[2] + lines[i-2].split("\t")[3]]		      #On stocke le lemme du mot voisin
+			col2_index = WORD2IDX[lines[i-2].split("\t")[2] + lines[i-2].split("\t")[3]] #On stocke le lemme du mot voisin
 			ROWS.append(row_index)
 			COLS.append(col2_index)
 			ROWS.append(col2_index)
 			COLS.append(row_index)
-		except IndexError:
+		except IndexError: #on évite de prendre les lignes vides
 			continue
 
+#load data from all corpuses
 path = "C:\\Users\\garri\\Documents\\estrepublicain.a.outmalt.tar\\estrepublicain.a.outmalt"
 for file in os.listdir(path):
 	load_data3(f"{path}\\{file}")
 	print(path+"\\"+file+ " DONE", len(WORD2IDX.keys()) , sys.getsizeof(WORD2IDX))
 	break
-	
+
+#trois vecteurs de même taille, construisent la matrice par coordonnée (coo_array) et conversion en csr_array (meilleur pour calculs)
 DATA = np.ones(len(ROWS))
 ROWS = np.array(ROWS,dtype = np.int32)
 COLS = np.array(COLS,dtype= np.int32)
-finalmatrix = coo_array((DATA, (ROWS, COLS)), dtype=np.int16)
+finalmatrix = coo_array((DATA, (ROWS, COLS)), dtype=np.int16).tocsr()
 
 			
 			
