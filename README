@@ -1,0 +1,60 @@
+[README]
+
+Pensez à bien respecter ces étapes pour que le thesaurus soit bien configuré:
+
+-télécharger main.py, evaluation_list.txt dans un même dossier "therannosaurus"
+-créer un dossier "corpus" dans ce dossier principal, il contiendra les corpus pour construire le thésaurus.
+
+-téléchargement des corpus à partir de l'invite de commande:
+	placez vous dans le répertoire "therannosaurus":
+   		cd C:\...\therannosaurus\corpus)
+
+	téléchargez les corpus:
+		curl.exe --output corpusA.tgz --url http://www.linguist.univ-paris-diderot.fr/~mcandito/estrepublicain.a.outmalt.tgz
+		curl.exe --output corpusB.tgz --url http://www.linguist.univ-paris-diderot.fr/~mcandito/estrepublicain.b.outmalt.tgz
+		curl.exe --output corpusC.tgz --url http://www.linguist.univ-paris-diderot.fr/~mcandito/estrepublicain.c.outmalt.tgz
+	
+	décompressez les fichiers:
+		tar -xvzf corpusA.tgz
+		tar -xvzf corpusB.tgz
+		tar -xvzf corpusC.tgz
+	
+	supprimez les fichiers compressés:
+		delete corpusA.tgz
+		delete corpusB.tgz
+		delete corpusC.tgz
+
+téléchargement des librairies nécessaires au bon fonctionnement du thesaurus:
+	placez vous dans votre répertoire de travail:
+	lancez les commandes suivantes depuis l'invite de commande
+		python -m pip install sklearn
+		python -m pip install scipy
+		python -m pip install numpy
+
+
+vous pouvez à présent lancer main.py !
+
+
+
+le thésaurus se manipule de manière interractive depuis l'invite de commandes on peut choisir de:
+	-lancer un test qui compare les résultats obtenus par le thesaurus à ceux donnés par des humains (run et stop immediatement après)
+	-proposer un mot et extraire les 10 mots les plus similaires depuis le corpus (Run une fois et possibilité de chercher des mots indéfinniement)
+
+ces deux solutions sont celles dont les paramètres sont proposés par défaut sur les performances les plus optimales.
+
+Si vous souhaitez regénérer la matrice avec vos propres paramètres il suffit de rentrer un des deux bloc suivants:
+(veillez de ne pas changer les valeurs de "testing" et "sparse_cosine_matrix")
+(veillez de ne pas mettre la valeur de count_documents au delà de 78(le nombre de documents dans le corpus))
+
+
+#Tester les performances
+matrix = load_data_and_compute_matrix(testing=True, only_nouns=False, consider_index=False, count_documents=1, sparse_cosine_matrix=False)
+test(matrix)
+
+#Tester un mot
+matrix = load_data_and_compute_matrix(testing=False, only_nouns=False, consider_index=False, count_documents=1, sparse_cosine_matrix=True)
+find_most_similar(matrix, "VOTRE MOT ICI")
+find_most_similar(matrix, "VOTRE MOT2 ICI")
+find_most_similar(matrix, "VOTRE MOT3 ICI")
+...
+
