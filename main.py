@@ -44,7 +44,7 @@ def load_data(path, testing=False, only_nouns=False, consider_index=True):
 	COLS = list()
 
 	#readfile
-	with open(path, "r", encoding='utf-8', errors='ignore') as corpus:   #Chargement du corpus (nom du fichier potentiellement à changer)
+	with open(path, "r", encoding='utf-8', errors='ignore') as corpus:
 		lines = corpus.readlines()
 
 	#iteration over each line of file
@@ -67,20 +67,21 @@ def load_data(path, testing=False, only_nouns=False, consider_index=True):
 				continue
 
 		#get index (or create it if not in WORD2IDX)
-		WORD2IDX[key] = WORD2IDX.get(key, len(WORD2IDX.keys()) + 1)	   #Si la clé (lemme, cat) n'existe pas encore dans le thésaurus, on la crée
+		WORD2IDX[key] = WORD2IDX.get(key, len(WORD2IDX.keys()) + 1)
 		row_index = WORD2IDX[key]
 
 		#negative relative positions
 		#i-1
 		try:
 			if consider_index:
-				key_minus1 = lines[i-1].split("\t")[2].lower() + lines[i-1].split("\t")[3] + "-1"
+				key_minus1 = lines[i-1].split("\t")[2].lower() + "-1"
 			else:
-				key_minus1 = lines[i-1].split("\t")[2].lower() + lines[i-1].split("\t")[3]
+				key_minus1 = lines[i-1].split("\t")[2].lower()
 
 			#column indexes
 			RELATIVE_WORD2IDX[key_minus1] = RELATIVE_WORD2IDX.get(key_minus1, len(RELATIVE_WORD2IDX.keys())+1)
-			neg_col1_index = RELATIVE_WORD2IDX[key_minus1]		      #On stocke le lemme du mot voisin
+			neg_col1_index = RELATIVE_WORD2IDX[key_minus1]
+			#update COLS and ROWS
 			ROWS.append(row_index)
 			COLS.append(neg_col1_index)
 		except IndexError:
@@ -88,13 +89,14 @@ def load_data(path, testing=False, only_nouns=False, consider_index=True):
 		#i-2
 		try:
 			if consider_index:
-				key_minus2 = lines[i-2].split("\t")[2].lower() + lines[i-2].split("\t")[3] + "-2"
+				key_minus2 = lines[i-2].split("\t")[2].lower() + "-2"
 			else:
-				key_minus2 = lines[i-2].split("\t")[2].lower() + lines[i-2].split("\t")[3]
+				key_minus2 = lines[i-2].split("\t")[2].lower()
 
 			#column indexes
 			RELATIVE_WORD2IDX[key_minus2] = RELATIVE_WORD2IDX.get(key_minus2, len(RELATIVE_WORD2IDX.keys())+1)
-			neg_col2_index = RELATIVE_WORD2IDX[key_minus2]		      #On stocke le lemme du mot voisin			ROWS.append(row_index)
+			neg_col2_index = RELATIVE_WORD2IDX[key_minus2]
+			#update COLS and ROWS
 			ROWS.append(row_index)
 			COLS.append(neg_col2_index)
 		except IndexError:
@@ -104,11 +106,12 @@ def load_data(path, testing=False, only_nouns=False, consider_index=True):
 		#i+1
 		try:
 			if consider_index:
-				key_plus1 = lines[i+1].split("\t")[2].lower() + lines[i+1].split("\t")[3] + "+1"
+				key_plus1 = lines[i+1].split("\t")[2].lower() + "+1"
 			else:
-				key_plus1 = lines[i+1].split("\t")[2].lower() + lines[i+1].split("\t")[3]
+				key_plus1 = lines[i+1].split("\t")[2].lower()
 			RELATIVE_WORD2IDX[key_plus1] = RELATIVE_WORD2IDX.get(key_plus1, len(RELATIVE_WORD2IDX.keys())+1)
-			pos_col1_index = RELATIVE_WORD2IDX[key_plus1]		      #On stocke le lemme du mot voisin
+			pos_col1_index = RELATIVE_WORD2IDX[key_plus1]
+			#update COLS and ROWS
 			ROWS.append(row_index)
 			COLS.append(pos_col1_index)
 		except IndexError:
@@ -116,13 +119,13 @@ def load_data(path, testing=False, only_nouns=False, consider_index=True):
 		#i+2
 		try:
 			if consider_index:
-				key_plus2 = lines[i+2].split("\t")[2].lower() + lines[i+2].split("\t")[3] + "+2"
+				key_plus2 = lines[i+2].split("\t")[2].lower() + "+2"
 			else:
-				key_plus2 = lines[i+2].split("\t")[2].lower() + lines[i+2].split("\t")[3]
-
+				key_plus2 = lines[i+2].split("\t")[2].lower()
 			#column indexes
 			RELATIVE_WORD2IDX[key_plus2] = RELATIVE_WORD2IDX.get(key_plus2, len(RELATIVE_WORD2IDX.keys())+1)
 			pos_col2_index = RELATIVE_WORD2IDX[key_plus2]
+			#update COLS and ROWS
 			ROWS.append(row_index)
 			COLS.append(pos_col2_index)
 		except IndexError:
@@ -153,7 +156,7 @@ def get_var_stats(Matrix, path):
 		#check if both words are in vocab
 		if (splitted[0] in WORD2IDX.keys() and splitted[1] in WORD2IDX.keys()):
 			try:
-				X[splitted[0]+" "+splitted[1]] = Matrix[WORD2IDX[splitted[0]]][WORD2IDX[splitted[1]]]		#X["nchat nchien"] = M[indice de "nchat"][indice de "nchien"]
+				X[splitted[0]+" "+splitted[1]] = Matrix[WORD2IDX[splitted[0]]][WORD2IDX[splitted[1]]]		#X["chat chien"] = M[indice de "chat"][indice de "nchien"]
 				Y[splitted[0]+" "+splitted[1]] = float(splitted[2])/4
 			except IndexError:
 				pass	
@@ -339,18 +342,21 @@ def load_data_and_compute_matrix(testing=False, only_nouns=False, consider_index
 	print(f"Result obtained in {end-start} seconds")
 	print(f"considering only nouns: {only_nouns}")
 	print(f"considering only test corpus({finalmatrix.shape[0]}/65 pairs): {testing}")
-	print(f"cosine matrix shape: {X.shape}")
+	print(f"cosine matrix shape: {X.shape}\n")
 
 	return X
 
 
 def main():
 	global WORD2IDX
-	print("Welcome in Therranosaurus engine !\nPress[T] to display test results (pearson and spearman)\nPress [R] to find word similarities")
+	print("Welcome in Therannosaurus engine !\nPress[T] to display test results (pearson and spearman)\nPress [R] to find word similarities")
 	user_input = input()
 
-	while user_input.lower() != "t":
-		user_input = input("enter R or T:\n")
+	while True:
+		if user_input.lower() not in ["t", "r"]:
+			user_input = input("enter R or T:\n")
+		else:
+			break
 
 	if user_input.lower() == "t":
 		matrix = load_data_and_compute_matrix(testing=True, only_nouns=False, consider_index=True, count_documents=1, sparse_cosine_matrix=False)
