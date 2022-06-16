@@ -348,4 +348,5 @@ def run_all_tests():
 
 	
 #run_all_tests()
-find_most_similar("homme", count_documents=26)
+find_most_similar("homme", count_documents=1)
+
