@@ -1,12 +1,12 @@
-import sklearn.preprocessing as pp
 from sklearn.metrics.pairwise import cosine_similarity as sklearn_cosine_similarity
 
 from scipy.sparse import coo_array
+from scipy.sparse import csr_array
+
 import numpy as np
 import time
 import sys
 import os
-
 
 #define global variables, might switch to a normal version...
 #global thesaurus
@@ -191,7 +191,7 @@ def spearman(X, Y):	#tjr la même
 def test(testing=True, only_nouns=False, consider_index=True, count_documents=1):
 	start=time.time()
 
-	finalmatrix = load_data_and_compute_matrix(testing, only_nouns, consider_index, count_documents)
+	finalmatrix = load_data_and_compute_matrix(testing, only_nouns, consider_index, count_documents, sparse_cosine_matrix=False)
 	XX,YY = get_var_stats(finalmatrix,"evaluation_list.txt")
 
 	print("spearman: ",spearman(XX,YY))
@@ -202,7 +202,7 @@ def test(testing=True, only_nouns=False, consider_index=True, count_documents=1)
 	print(f"Result obtained in {str(end-start)[:4]} seconds")
 	print(f"considering only nouns: {only_nouns}")
 	print(f"considering relative position: {consider_index}")
-	print(f"considering only test corpus({finalmatrix.shape[0]}65 pairs): {testing}")
+	print(f"considering only test corpus({finalmatrix.shape[0]}/65 pairs): {testing}")
 	print(f"cosine matrix shape: {finalmatrix.shape}")
 
 
@@ -214,37 +214,42 @@ def save_matrix(cosine_matrix):
 def load_matrix():
 	return np.load("cosine_matrix.npy")
 
-def find_most_similar(key, testing=True, only_nouns=True, consider_index=True):
+def find_most_similar(key, testing=False, only_nouns=False, consider_index=True, count_documents=1):
 	start = time.time()
 	global IDX2WORD
 	result = list()
 	#compute cosine matrix
-	finalmatrix = load_data_and_compute_matrix(testing, only_nouns, consider_index)
+	finalmatrix = load_data_and_compute_matrix(testing, only_nouns, consider_index, count_documents, sparse_cosine_matrix=True)
 	i = WORD2IDX[key]
 	for index in range(1,len(IDX2WORD.keys())):
 		if index == 0 or index >= len(IDX2WORD.keys()):
 			print("skip")
 			continue
 		else:
-			if finalmatrix[i][index] > 0.85 and finalmatrix[i][index]<0.98:
-				tup = (IDX2WORD[i], IDX2WORD[index], finalmatrix[i][index])
+			try:
+				sim = finalmatrix.getrow(i).getcol(index).data[0]
+			except IndexError:
+				continue
+			if sim > 0.85 and sim < 0.98:
+				tup = (IDX2WORD[i], IDX2WORD[index], sim)
 				result.append(tup)
 
 	result = sorted(result, key=lambda tup: tup[2], reverse=True,)[:10]
 	end = time.time()
 
 	for elt in result:
-		print(f"{elt[1]} ({str(elt[2])[:5]}/1)")
+		print(f"{elt[1]} ({str(elt[2])[:5]})")
 	print(f"Result obtained in {end-start} seconds")
 	print(f"considering only nouns: {only_nouns}")
 	print(f"considering only test corpus({finalmatrix.shape[0]}/65 pairs): {testing}")
 	print(f"cosine matrix shape: {finalmatrix.shape}")
 
-def load_data_and_compute_matrix(testing=False, only_nouns=False, consider_index=True, count_documents=1):
+def load_data_and_compute_matrix(testing=False, only_nouns=False, consider_index=True, count_documents=1, sparse_cosine_matrix=True):
 	global ROWS
 	global COLS
 	#parse corpuses
 	path = "C:\\Users\\garri\\Documents\\estrepublicain.a.outmalt.tar\\estrepublicain.a.outmalt"
+	path = os.getcwd()+"\\corpus"
 	count = 0
 	for file in os.listdir(path):
 		load_data(f"{path}\\{file}", testing, only_nouns, consider_index)
@@ -262,7 +267,10 @@ def load_data_and_compute_matrix(testing=False, only_nouns=False, consider_index
 	print(f"matrix shape before cosine computing:{finalmatrix.shape}")
 
 	#compute cosine matrix
-	return sklearn_cosine_similarity(finalmatrix)
+	if sparse_cosine_matrix:
+		return sklearn_cosine_similarity(finalmatrix, dense_output=False)
+	else:
+		return  sklearn_cosine_similarity(finalmatrix, dense_output=True)
 
 def run_all_tests():
 	global WORD2IDX
@@ -339,5 +347,5 @@ def run_all_tests():
 	test(testing=True, only_nouns=True, consider_index=True,count_documents=10)	
 
 	
-
-run_all_tests()
+#run_all_tests()
+find_most_similar("homme", count_documents=26)
