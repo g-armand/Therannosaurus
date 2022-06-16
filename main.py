@@ -178,7 +178,7 @@ def sigma(X):
 	for val in X.values():
 		array_sum += (val-moyx)**2
 	variance = array_sum / len(X)
-	return np.sqrt(variance)	#eh oui Jamy puisque l'écart-type n'est que la racine carrée de la variance
+	return np.sqrt(variance)
 
 
 #FOR TESTING
