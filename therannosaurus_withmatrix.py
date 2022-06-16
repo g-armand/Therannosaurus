@@ -201,6 +201,7 @@ def test(testing=True, only_nouns=False, consider_index=True, count_documents=1)
 
 	print(f"Result obtained in {str(end-start)[:4]} seconds")
 	print(f"considering only nouns: {only_nouns}")
+	print(f"considering relative position: {consider_index}")
 	print(f"considering only test corpus({finalmatrix.shape[0]}65 pairs): {testing}")
 	print(f"cosine matrix shape: {finalmatrix.shape}")
 
@@ -258,6 +259,8 @@ def load_data_and_compute_matrix(testing=False, only_nouns=False, consider_index
 	ROWS = np.array(ROWS,dtype = np.int64)
 	COLS = np.array(COLS,dtype= np.int64)
 	finalmatrix = coo_array((DATA, (ROWS, COLS)), dtype=np.int64).tocsr()
+	print(f"matrix shape before cosine computing:{finalmatrix.shape}")
+
 	#compute cosine matrix
 	return sklearn_cosine_similarity(finalmatrix)
 
@@ -299,7 +302,13 @@ def run_all_tests():
 	print("\n\n[TEST 4]")
 	test(testing=True, only_nouns=True, consider_index=True)	
 
-	print("[TEST 5]")
+	#reset global values
+	WORD2IDX=dict()
+	IDX2WORD=dict()
+	RELATIVE_WORD2IDX=dict()
+	ROWS =list()
+	COLS =list()
+	print("\n\n[TEST 5]")
 	test(testing=True, only_nouns=False, consider_index=False, count_documents=10)
 	
 	#reset global values
