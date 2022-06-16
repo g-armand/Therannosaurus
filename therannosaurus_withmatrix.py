@@ -1,9 +1,8 @@
 from sklearn.metrics.pairwise import cosine_similarity as sklearn_cosine_similarity
-
 from scipy.sparse import coo_array
 from scipy.sparse import csr_array
-
 import numpy as np
+
 import time
 import sys
 import os
@@ -122,8 +121,7 @@ def load_data(path, testing=False, only_nouns=False, consider_index=True):
 	#switch keys(unique) and indexes(unique)
 	IDX2WORD = {WORD2IDX[key]:key for key in WORD2IDX.keys()}
 
-def get_var_stats(Matrix, path):		#littéralement le doc envoyé par la prof (même si il s'appelle pas comme ça), pas besoin d'y toucher
-	X = {}	#similarités machine
+def get_var_stats(Matrix, path):		
 	Y = {}	#similarités humaines
 	with open(path, 'r', encoding = "utf-8") as file:
 		lines = file.readlines()
@@ -188,23 +186,10 @@ def spearman(X, Y):	#tjr la même
 	return pearson(rgX, rgY)
 
 
-def test(testing=True, only_nouns=False, consider_index=True, count_documents=1):
-	start=time.time()
-
-	finalmatrix = load_data_and_compute_matrix(testing, only_nouns, consider_index, count_documents, sparse_cosine_matrix=False)
-	XX,YY = get_var_stats(finalmatrix,"evaluation_list.txt")
-
+def test(matrix, testing=True, only_nouns=False, consider_index=True, count_documents=1):
+	XX,YY = get_var_stats(matrix,"evaluation_list.txt")
 	print("spearman: ",spearman(XX,YY))
 	print("pearson: ",pearson(XX,YY))
-
-	end = time.time()
-
-	print(f"Result obtained in {str(end-start)[:4]} seconds")
-	print(f"considering only nouns: {only_nouns}")
-	print(f"considering relative position: {consider_index}")
-	print(f"considering only test corpus({finalmatrix.shape[0]}/65 pairs): {testing}")
-	print(f"cosine matrix shape: {finalmatrix.shape}")
-
 
 
 def save_matrix(cosine_matrix):
@@ -214,12 +199,11 @@ def save_matrix(cosine_matrix):
 def load_matrix():
 	return np.load("cosine_matrix.npy")
 
-def find_most_similar(key, testing=False, only_nouns=False, consider_index=True, count_documents=1):
-	start = time.time()
+def find_most_similar(matrix, key, testing=False, only_nouns=False, consider_index=True, count_documents=1):
 	global IDX2WORD
 	result = list()
 	#compute cosine matrix
-	finalmatrix = load_data_and_compute_matrix(testing, only_nouns, consider_index, count_documents, sparse_cosine_matrix=True)
+	finalmatrix = matrix
 	i = WORD2IDX[key]
 	for index in range(1,len(IDX2WORD.keys())):
 		if index == 0 or index >= len(IDX2WORD.keys()):
@@ -230,23 +214,28 @@ def find_most_similar(key, testing=False, only_nouns=False, consider_index=True,
 				sim = finalmatrix.getrow(i).getcol(index).data[0]
 			except IndexError:
 				continue
-			if sim > 0.85 and sim < 0.98:
+			if sim > 0.6 and sim < 0.99:
 				tup = (IDX2WORD[i], IDX2WORD[index], sim)
 				result.append(tup)
 
 	result = sorted(result, key=lambda tup: tup[2], reverse=True,)[:10]
-	end = time.time()
-
+	print(f"\n10 most similar words of {key}:")
 	for elt in result:
 		print(f"{elt[1]} ({str(elt[2])[:5]})")
-	print(f"Result obtained in {end-start} seconds")
-	print(f"considering only nouns: {only_nouns}")
-	print(f"considering only test corpus({finalmatrix.shape[0]}/65 pairs): {testing}")
-	print(f"cosine matrix shape: {finalmatrix.shape}")
+
 
 def load_data_and_compute_matrix(testing=False, only_nouns=False, consider_index=True, count_documents=1, sparse_cosine_matrix=True):
 	global ROWS
 	global COLS
+	
+	#reset global values
+	WORD2IDX=dict()
+	IDX2WORD=dict()
+	RELATIVE_WORD2IDX=dict()
+	ROWS =list()
+	COLS =list()
+
+	start = time.time()
 	#parse corpuses
 	path = "C:\\Users\\garri\\Documents\\estrepublicain.a.outmalt.tar\\estrepublicain.a.outmalt"
 	path = os.getcwd()+"\\corpus"
@@ -268,9 +257,17 @@ def load_data_and_compute_matrix(testing=False, only_nouns=False, consider_index
 
 	#compute cosine matrix
 	if sparse_cosine_matrix:
-		return sklearn_cosine_similarity(finalmatrix, dense_output=False)
+		X = sklearn_cosine_similarity(finalmatrix, dense_output=False)
 	else:
-		return  sklearn_cosine_similarity(finalmatrix, dense_output=True)
+		X = sklearn_cosine_similarity(finalmatrix, dense_output=True)
+	end = time.time()
+	#logs
+	print(f"Result obtained in {end-start} seconds")
+	print(f"considering only nouns: {only_nouns}")
+	print(f"considering only test corpus({finalmatrix.shape[0]}/65 pairs): {testing}")
+	print(f"cosine matrix shape: {X.shape}")
+
+	return X
 
 def run_all_tests():
 	global WORD2IDX
@@ -347,6 +344,31 @@ def run_all_tests():
 	test(testing=True, only_nouns=True, consider_index=True,count_documents=10)	
 
 	
-#run_all_tests()
-find_most_similar("homme", count_documents=1)
 
+def main():
+	global WORD2IDX
+	print("Welcome in Therranosaurus engine !\nPress[T] to display test results (pearson and spearman)\nPress [R] to find word similarities")
+	user_input = input() 
+
+	while user_input.lower() not in ["t", "r"]:
+		user_input = input("enter R or T:\n")
+
+	if user_input.lower() == "t":
+		matrix = load_data_and_compute_matrix(testing=True, only_nouns=False, consider_index=False, count_documents=1, sparse_cosine_matrix=False)
+		test(matrix)
+	else:
+		matrix = load_data_and_compute_matrix(testing=False, only_nouns=False, consider_index=False, count_documents=1, sparse_cosine_matrix=True)
+		while True:
+			user_input = input("Find 10 most similar words of: ")
+			if user_input.lower() == "q":
+				break
+			elif user_input not in WORD2IDX.keys():
+				print(f"Wrong input, {user_input} is not mapped in our thesaurus...")
+				continue
+			else:
+				find_most_similar(matrix, user_input.lower())
+				print("\n")
+			
+		
+
+main()
