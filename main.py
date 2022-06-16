@@ -126,7 +126,7 @@ def get_var_stats(Matrix, path):
 	with open(path, 'r', encoding = "utf-8") as file:
 		lines = file.readlines()
 	for line in lines:
-		splitted = line.split(",")	#vérifier si besoin de trim à cause du retour chariot / remplacer ligne par genre ligne[0:len(ligne)-1]
+		splitted = line.split(",")
 		if (splitted[0] in WORD2IDX.keys() and splitted[1] in WORD2IDX.keys()):		#on vérifie que les deux mots sont dans notre matrice
 			X[splitted[0]+" "+splitted[1]] = Matrix[WORD2IDX[splitted[0]]][WORD2IDX[splitted[1]]]		#X["nchat nchien"] = M[indice de "nchat"][indice de "nchien"]
 			Y[splitted[0]+" "+splitted[1]] = float(splitted[2])/4		
@@ -136,17 +136,17 @@ def get_var_stats(Matrix, path):
 
 
 #FONCTION POUR CALCULER L'ECART TYPE
-def sigma(X):	#avec X évidemment une variable statistique représentée par un dico
+def sigma(X):	#avec X une variable statistique représentée par un dict
 	moyx = np.mean(list(X.values()))
 	array_sum = 0
 	for val in X.values():
 		array_sum += (val-moyx)**2
 	variance = array_sum / len(X)
-	return np.sqrt(variance)	#eh oui Jamy puisque l'écart-type n'est que la racine carrée de la variance
+	return np.sqrt(variance)
 
 
-#FONCTION POUR CALCULER LA COVARIANCE, VERSION MOINS STUPIDE
-def covar(X, Y):	#X Y évidemment nos deux variables stats adorées
+#FONCTION POUR CALCULER LA COVARIANCE,
+def covar(X, Y):	#X Y deux variables stats représentées par des dict 
 	moyx = np.mean(list(X.values()))
 	moyy = np.mean(list(Y.values()))
 	array_sum = 0
@@ -156,7 +156,7 @@ def covar(X, Y):	#X Y évidemment nos deux variables stats adorées
 
 
 #FONCTION POUR CALCULER LA SIMILARITE LINEAIRE
-def pearson(X, Y):	#X Y nos (je te laisse compléter)
+def pearson(X, Y):	#idem
 	covariance = covar(X,Y)
 	etypex = sigma(X)
 	etypey = sigma(Y)
@@ -166,7 +166,7 @@ def pearson(X, Y):	#X Y nos (je te laisse compléter)
 
 #FONCTION POUR CALCULER LA SIMILARITE LINEAIRE SUR LES RANGS
 
-def spearman(X, Y):	#tjr la même
+def spearman(X, Y):	#idem
 	rgX = {}
 	rgY = {}
 	valX = sorted(list(X.values()))
